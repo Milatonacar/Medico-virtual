@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente Médico</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #e0f2f1;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border: 1px solid #004d40;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #004d40;
+            font-size: 2.5em;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #004d40;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #004d40;
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            background: #00796b;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background: #004d40;
+            transform: scale(1.05);
+        }
+
+        .result {
+            background: #f1f8e9;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #00796b;
+        }
+
+        .result h2 {
+            margin-top: 0;
+            color: #00796b;
+        }
+
+        .receipt-template {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Assistente Médico Virtual</h1>
+
+        <div class="section">
+            <label for="patientName">Nome do Paciente:</label>
+            <input type="text" id="patientName" placeholder="Insira o nome do paciente">
+        </div>
+
+        <div class="section">
+            <label for="symptoms">Descrição dos Sintomas:</label>
+            <textarea id="symptoms" rows="5" placeholder="Digite os sintomas separados por vírgula"></textarea>
+            <button onclick="identifyDisease()">Identificar Doença e Gerar Receita</button>
+        </div>
+
+        <div class="result">
+            <h2>Resultado</h2>
+            <div id="diseaseResult"></div>
+            <div id="receiptResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const diseaseMap = [
+          
+
+		   {
+                symptoms: ['febre', 'tosse', 'dor de garganta'],
+                name: 'Infecção Viral',
+                diagnosis: 'Infecção viral comum, frequentemente associada a febre, tosse e dor de garganta.',
+                medication: [
+                    { name: 'Paracetamol', dose: '500mg', frequency: '3 vezes ao dia', duration: '5 dias' },
+                    { name: 'Xarope para tosse', dose: '10ml', frequency: '2 vezes ao dia', duration: '5 dias' }
+                ]
+            },
+            {
+                symptoms: ['dor de cabeça', 'fadiga', 'náusea'],
+                name: 'Enxaqueca ou Sinusite',
+                diagnosis: 'Possível enxaqueca ou sinusite, que pode causar dor de cabeça intensa, fadiga e náusea.',
+                medication: [
+                    { name: 'Ibuprofeno', dose: '400mg', frequency: '2 vezes ao dia', duration: '3 dias' },
+                    { name: 'Anti-nauseante', dose: '10mg', frequency: '1 vez ao dia', duration: '2 dias' }
+                ]
+            },
+            {
+                symptoms: ['náusea', 'vômito', 'diarréia'],
+                name: 'Gastroenterite',
+                diagnosis: 'Sintomas que podem indicar gastroenterite, geralmente acompanhados por vômito e diarréia.',
+                medication: [
+                    { name: 'Soro Oral', dose: '1 litro', frequency: 'continuamente', duration: '3 dias' },
+                    { name: 'Antidiarreico', dose: '200mg', frequency: '2 vezes ao dia', duration: '2 dias' }
+                ]
+            },
+            {
+                symptoms: ['dor muscular', 'fadiga'],
+                name: 'Gripe',
+                diagnosis: 'Pode ser gripe, caracterizada por dor muscular e fadiga.',
+                medication: [
+                    { name: 'Antigripal', dose: '500mg', frequency: '2 vezes ao dia', duration: '5 dias' }
+                ]
+            },
+            {
+                symptoms: ['congestão nasal', 'tosse', 'dor de garganta'],
+                name: 'Sinusite',
+                diagnosis: 'Possível sinusite, com sintomas como congestão nasal, tosse e dor de garganta.',
+                medication: [
+                    { name: 'Descongestionante nasal', dose: '20ml', frequency: '3 vezes ao dia', duration: '7 dias' },
+                    { name: 'Antibiótico', dose: '500mg', frequency: '2 vezes ao dia', duration: '7 dias' }
+                ]
+            },
+            {
+                symptoms: ['dificuldade para respirar', 'tosse'],
+                name: 'Asma',
+                diagnosis: 'Pode ser asma, caracterizada por dificuldade para respirar e tosse persistente.',
+                medication: [
+                    { name: 'Broncodilatador', dose: '200mcg', frequency: '2 vezes ao dia', duration: '7 dias' },
+                    { name: 'Corticosteroide inalatório', dose: '100mcg', frequency: '2 vezes ao dia', duration: '7 dias' }
+                ]
+            }
+        ];
+
+        function identifyDisease() {
+            const symptomsInput = document.getElementById('symptoms').value.toLowerCase().split(/\s*,\s*/);
+            const patientName = document.getElementById('patientName').value.trim();
+            const diseaseResult = document.getElementById('diseaseResult');
+            const receiptResult = document.getElementById('receiptResult');
+
+            let result = 'Não identificado';
+            let medicationList = '';
+
+            for (const disease of diseaseMap) {
+                if (disease.symptoms.every(symptom => symptomsInput.includes(symptom))) {
+                    result = `<strong>Doença:</strong> ${disease.name}<br><strong>Diagnóstico:</strong> ${disease.diagnosis}`;
+                    medicationList = `<strong>Receita:</strong><br>` +
+                        disease.medication.map(med => 
+                            `Medicamento: ${med.name}<br>Dose: ${med.dose}<br>Frequência: ${med.frequency}<br>Duração: ${med.duration}<br><br>`
+                        ).join('');
+                    break;
+                }
+            }
+
+            diseaseResult.innerHTML = result;
+            receiptResult.innerHTML = `
+                <strong>Receita Médica</strong><br>
+                Paciente: ${patientName || '[Nome não fornecido]'}<br><br>
+                ${result}<br><br>
+                ${medicationList || 'Nenhuma receita disponível.'}
+            `;
+        }
+    </script>
+</body>
+</html>
+
+
+
